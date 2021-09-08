@@ -19,7 +19,7 @@
     "prettier:check": "prettier --check '**/*.{js}'",
     "validate": "run-s lint prettier:check",
     "build": "rollup -c",
-    "install": "npx rollup -c"
+    "install": "rollup -c"
   },
   "repository": {
     "type": "git",
