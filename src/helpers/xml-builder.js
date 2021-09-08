@@ -496,34 +496,43 @@ const buildRunOrRuns = (vNode, attributes) => {
 };
 
 const buildRunOrHyperLink = (vNode, attributes, docxDocumentInstance) => {
-  if (isVNode(vNode) && vNode.tagName === 'a') {
-    const relationshipId = docxDocumentInstance.createDocumentRelationships(
-      docxDocumentInstance.relationshipFilename,
-      'hyperlink',
-      vNode.properties && vNode.properties.href ? vNode.properties.href : ''
-    );
-    const hyperlinkFragment = fragment({
-      namespaceAlias: { w: namespaces.w, r: namespaces.r },
-    })
-      .ele('@w', 'hyperlink')
-      .att('@r', 'id', `rId${relationshipId}`);
+  if (isVNode(vNode)) {
+    if (vNode.tagName === 'a') {
+      const relationshipId = docxDocumentInstance.createDocumentRelationships(
+        docxDocumentInstance.relationshipFilename,
+        'hyperlink',
+        vNode.properties && vNode.properties.href ? vNode.properties.href : ''
+      );
+      const hyperlinkFragment = fragment({
+        namespaceAlias: { w: namespaces.w, r: namespaces.r },
+      })
+        .ele('@w', 'hyperlink')
+        .att('@r', 'id', `rId${relationshipId}`);
 
-    const modifiedAttributes = { ...attributes };
-    modifiedAttributes.hyperlink = true;
+      const modifiedAttributes = { ...attributes };
+      modifiedAttributes.hyperlink = true;
 
-    const runFragments = buildRunOrRuns(vNode.children[0], modifiedAttributes);
-    if (Array.isArray(runFragments)) {
-      for (let index = 0; index < runFragments.length; index++) {
-        const runFragment = runFragments[index];
+      const runFragments = buildRunOrRuns(vNode.children[0], modifiedAttributes);
+      if (Array.isArray(runFragments)) {
+        for (let index = 0; index < runFragments.length; index++) {
+          const runFragment = runFragments[index];
 
-        hyperlinkFragment.import(runFragment);
+          hyperlinkFragment.import(runFragment);
+        }
+      } else {
+        hyperlinkFragment.import(runFragments);
       }
-    } else {
-      hyperlinkFragment.import(runFragments);
-    }
-    hyperlinkFragment.up();
+      hyperlinkFragment.up();
 
-    return hyperlinkFragment;
+      return hyperlinkFragment;
+    } else {
+      const runFragments = [];
+      for (let index = 0; index < vNode.children.length; index++) {
+        const childVNode = vNode.children[index];
+        runFragments.push(buildRunOrHyperLink(childVNode, attributes, docxDocumentInstance));
+      }
+      return runFragments;
+    }
   }
   const runFragments = buildRunOrRuns(vNode, attributes);
 
