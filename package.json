@@ -18,8 +18,7 @@
     "lint": "eslint --fix .",
     "prettier:check": "prettier --check '**/*.{js}'",
     "validate": "run-s lint prettier:check",
-    "build": "rollup -c",
-    "install": "rollup -c"
+    "build": "rollup -c"
   },
   "repository": {
     "type": "git",
