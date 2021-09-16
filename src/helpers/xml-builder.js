@@ -705,6 +705,11 @@ const addTo = (fragments, parentFragment) => {
   }
 } 
 
+/**
+ * Read and add attributes to existing attributes from a node
+ * @param {VNode} vNode - Virtual node
+ * @param {any} attributes - attritbutes carried over from parent
+ */
 const getModifiedAttributes = (vNode, attributes) => {
   const modifiedAttributes = { ...attributes };
   if (isVNode(vNode) && vNode.properties && vNode.properties.style) {
