@@ -257,12 +257,6 @@ function findXMLEquivalent(docxDocumentInstance, vNode, xmlFragment) {
         xmlFragment.import(paragraphFragment);
       }
       return;
-    // case 'img':
-    //   const imageFragment = buildImage(docxDocumentInstance, vNode);
-    //   if (imageFragment) {
-    //     xmlFragment.import(imageFragment);
-    //   }
-    //   return;
     case 'br':
       const linebreakFragment = xmlBuilder.buildParagraph(null, {});
       xmlFragment.import(linebreakFragment);
