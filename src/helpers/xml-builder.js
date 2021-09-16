@@ -4,13 +4,12 @@
 /* eslint-disable no-plusplus */
 /* eslint-disable no-else-return */
 import { fragment } from 'xmlbuilder2';
-import { VText } from 'virtual-dom';
 import isVNode from 'virtual-dom/vnode/is-vnode';
 import isVText from 'virtual-dom/vnode/is-vtext';
 import colorNames from 'color-name';
 
 // eslint-disable-next-line import/no-named-default
-import { default as namespaces } from './namespaces';
+import namespaces from './namespaces';
 import {
   rgbToHex,
   hslToHex,
@@ -34,9 +33,6 @@ import {
   pixelToEIP,
   pointToEIP,
 } from '../utils/unit-conversion';
-// FIXME: remove the cyclic dependency
-// eslint-disable-next-line import/no-cycle
-// import { buildImage } from './render-document-file';
 import sizeOf from 'image-size';
 
 // eslint-disable-next-line consistent-return
@@ -342,77 +338,7 @@ const buildTextFormatting = (vNode) => {
   }
 };
 
-const buildRun = (vNode, attributes) => {
-  const runFragment = fragment({
-    namespaceAlias: { w: namespaces.w },
-  }).ele('@w', 'r');
-  const runPropertiesFragment = buildRunProperties(attributes);
 
-  if (
-    isVNode(vNode) &&
-    [
-      'span',
-      'strong',
-      'b',
-      'em',
-      'i',
-      'u',
-      'ins',
-      'strike',
-      'del',
-      's',
-      'sub',
-      'sup',
-      'mark',
-      'blockquote',
-    ].includes(vNode.tagName)
-  ) {
-    const textArray = [];
-
-    let vNodes = [vNode];
-    while (vNodes.length) {
-      const tempVNode = vNodes.shift();
-      if (isVText(tempVNode)) {
-        textArray.push(tempVNode.text);
-      }
-      if (
-        isVNode(tempVNode) &&
-        ['strong', 'b', 'em', 'i', 'u', 'ins', 'strike', 'del', 's', 'sub', 'sup', 'mark'].includes(
-          tempVNode.tagName
-        )
-      ) {
-        const formattingFragment = buildTextFormatting(tempVNode);
-        runPropertiesFragment.import(formattingFragment);
-      }
-
-      if (tempVNode.children && tempVNode.children.length) {
-        vNodes = tempVNode.children.slice().concat(vNodes);
-      }
-    }
-    if (textArray.length) {
-      const combinedString = textArray.join('');
-      // eslint-disable-next-line no-param-reassign
-      vNode = new VText(combinedString);
-    }
-  }
-
-  runFragment.import(runPropertiesFragment);
-  if (isVText(vNode)) {
-    const textFragment = buildTextElement(vNode.text);
-    runFragment.import(textFragment);
-  } else if (attributes && attributes.type === 'picture') {
-    const { type, inlineOrAnchored, ...otherAttributes } = attributes;
-    // eslint-disable-next-line no-use-before-define
-    const imageFragment = buildDrawing(inlineOrAnchored, type, otherAttributes);
-    runFragment.import(imageFragment);
-  } else if (isVNode(vNode) && vNode.tagName === 'br') {
-    const lineBreakFragment = buildLineBreak();
-    runFragment.import(lineBreakFragment);
-  }
-  runFragment.up();
-
-  return runFragment;
-};
 
 // eslint-disable-next-line consistent-return
 const fixupLineHeight = (lineHeight, fontSize) => {
@@ -459,77 +385,9 @@ const fixupRowHeight = (rowHeightString) => {
   }
 };
 
-const buildRunOrRuns = (vNode, attributes) => {
-  if (isVNode(vNode) && vNode.tagName === 'span') {
-    const runFragments = [];
 
-    for (let index = 0; index < vNode.children.length; index++) {
-      const childVNode = vNode.children[index];
-      const modifiedAttributes = { ...attributes };
-      if (isVNode(vNode) && vNode.properties && vNode.properties.style) {
-        if (
-          vNode.properties.style.color &&
-          !['transparent', 'auto'].includes(vNode.properties.style.color)
-        ) {
-          modifiedAttributes.color = fixupColorCode(vNode.properties.style.color);
-        }
-        if (
-          vNode.properties.style['background-color'] &&
-          !['transparent', 'auto'].includes(vNode.properties.style['background-color'])
-        ) {
-          modifiedAttributes.backgroundColor = fixupColorCode(
-            vNode.properties.style['background-color']
-          );
-        }
-        if (vNode.properties.style['font-size']) {
-          modifiedAttributes.fontSize = fixupFontSize(vNode.properties.style['font-size']);
-        }
-      }
-      runFragments.push(buildRun(childVNode, modifiedAttributes));
-    }
 
-    return runFragments;
-  } else {
-    const runFragment = buildRun(vNode, attributes);
 
-    return runFragment;
-  }
-};
-
-const buildRunOrHyperLink = (vNode, attributes, docxDocumentInstance) => {
-  if (isVNode(vNode) && vNode.tagName === 'a') {
-    const relationshipId = docxDocumentInstance.createDocumentRelationships(
-      docxDocumentInstance.relationshipFilename,
-      'hyperlink',
-      vNode.properties && vNode.properties.href ? vNode.properties.href : ''
-    );
-    const hyperlinkFragment = fragment({
-      namespaceAlias: { w: namespaces.w, r: namespaces.r },
-    })
-      .ele('@w', 'hyperlink')
-      .att('@r', 'id', `rId${relationshipId}`);
-
-    const modifiedAttributes = { ...attributes };
-    modifiedAttributes.hyperlink = true;
-
-    const runFragments = buildRunOrRuns(vNode.children[0], modifiedAttributes);
-    if (Array.isArray(runFragments)) {
-      for (let index = 0; index < runFragments.length; index++) {
-        const runFragment = runFragments[index];
-
-        hyperlinkFragment.import(runFragment);
-      }
-    } else {
-      hyperlinkFragment.import(runFragments);
-    }
-    hyperlinkFragment.up();
-
-    return hyperlinkFragment;
-  }
-  const runFragments = buildRunOrRuns(vNode, attributes);
-
-  return runFragments;
-};
 
 const buildNumberingProperties = (levelId, numberingId) => {
   const numberingPropertiesFragment = fragment({
@@ -806,7 +664,7 @@ export const buildImage = (docxDocumentInstance, vNode, maximumWidth = null) => 
     // libtidy encodes the image src
     response = docxDocumentInstance.createMediaFile(decodeURIComponent(vNode.properties.src));
   } catch (error) {
-    // NOOP
+    return null;
   }
   if (response) {
     docxDocumentInstance.zip
@@ -913,6 +771,53 @@ const getRunFragment = (vNode, attributes, withProp) => {
   return runFragment;
 }
 
+const buildNestedText = (vNode, attributes, textEls) => {
+  let modifiedAttributes = attributes;
+  const runFragment = getRunFragment(vNode, modifiedAttributes, false);
+  const textArray = [];
+  let vNodes = [vNode];
+
+  const formats = [];
+  while (vNodes.length) {
+    const tempVNode = vNodes.shift();
+    modifiedAttributes = getModifiedAttributes(tempVNode, modifiedAttributes);
+    if(isVText(tempVNode)) {
+      textArray.push(tempVNode.text);
+    }
+    if(isVNode(tempVNode) && textEls.includes(tempVNode.tagName)) {
+      const formattingFragment = buildTextFormatting(tempVNode);
+      formats.push(formattingFragment);
+    }
+
+    if(tempVNode.children && tempVNode.children.length) {
+      vNodes = tempVNode.children.slice().concat(vNodes);
+    }
+  }
+  const runPropertiesFragment = buildRunProperties(modifiedAttributes);
+  formats.forEach(format=>runPropertiesFragment.import(format))
+  runFragment.import(runPropertiesFragment);
+  if(textArray.length) {
+    const combinedString = textArray.join('');
+    runFragment.import(buildTextElement(combinedString))
+  }
+  runFragment.up()
+  return runFragment;
+}
+
+const hyperLinkFragment = (vNode, docxDocumentInstance) => {
+  const relationshipId = docxDocumentInstance.createDocumentRelationships(
+    docxDocumentInstance.relationshipFilename,
+    'hyperlink',
+    vNode.properties && vNode.properties.href ? vNode.properties.href : ''
+  );
+  
+  return fragment({
+    namespaceAlias: { w: namespaces.w, r: namespaces.r },
+  })
+    .ele('@w', 'hyperlink')
+    .att('@r', 'id', `rId${relationshipId}`);
+}
+
 const buildNested = (vNode, attributes, docxDocumentInstance) => {
   const textEls = ['strong', 'b', 'em', 'i', 'u', 'ins', 'strike', 'del', 's', 'sub', 'sup', 'mark'];
   let modifiedAttributes = getModifiedAttributes(vNode, attributes);
@@ -923,50 +828,13 @@ const buildNested = (vNode, attributes, docxDocumentInstance) => {
     runFragment.import(buildTextElement(vNode.text));
   } else if(isVNode(vNode)) {
     if(vNode.tagName === 'a') {
-      const relationshipId = docxDocumentInstance.createDocumentRelationships(
-        docxDocumentInstance.relationshipFilename,
-        'hyperlink',
-        vNode.properties && vNode.properties.href ? vNode.properties.href : ''
-      );
-      runFragment = fragment({
-        namespaceAlias: { w: namespaces.w, r: namespaces.r },
-      })
-        .ele('@w', 'hyperlink')
-        .att('@r', 'id', `rId${relationshipId}`);
+      runFragment = hyperLinkFragment(vNode, docxDocumentInstance);
       modifiedAttributes.hyperlink = true;
     } else if (vNode.tagName === 'br') {
       runFragment = getRunFragment(vNode, modifiedAttributes, false)
       runFragment.import(buildLineBreak());
     } else if(textEls.includes(vNode.tagName)) {
-      runFragment = getRunFragment(vNode, modifiedAttributes, false);
-      const textArray = [];
-      let vNodes = [vNode];
-
-      const formats = [];
-      while (vNodes.length) {
-        const tempVNode = vNodes.shift();
-        modifiedAttributes = getModifiedAttributes(tempVNode, modifiedAttributes);
-        if(isVText(tempVNode)) {
-          textArray.push(tempVNode.text);
-        }
-        if(isVNode(tempVNode) && textEls.includes(tempVNode.tagName)) {
-          const formattingFragment = buildTextFormatting(tempVNode);
-          formats.push(formattingFragment);
-        }
-
-        if(tempVNode.children && tempVNode.children.length) {
-          vNodes = tempVNode.children.slice().concat(vNodes);
-        }
-      }
-      const runPropertiesFragment = buildRunProperties(modifiedAttributes);
-      formats.forEach(format=>runPropertiesFragment.import(format))
-      runFragment.import(runPropertiesFragment);
-      if(textArray.length) {
-        const combinedString = textArray.join('');
-        runFragment.import(buildTextElement(combinedString))
-      }
-      runFragment.up()
-      return runFragment;
+      return buildNestedText(vNode, modifiedAttributes, textEls);
     } 
     else if (vNode.tagName === 'img') {
       const result = buildImage(docxDocumentInstance, vNode);
@@ -1013,147 +881,7 @@ const buildParagraph = (vNode, attributes, docxDocumentInstance) => {
 
 // --
 
-const buildParagraphOld = (vNode, attributes, docxDocumentInstance) => {
-  const paragraphFragment = fragment({
-    namespaceAlias: { w: namespaces.w },
-  }).ele('@w', 'p');
-  const modifiedAttributes = { ...attributes };
-  if (isVNode(vNode) && vNode.properties && vNode.properties.style) {
-    if (
-      vNode.properties.style.color &&
-      !['transparent', 'auto'].includes(vNode.properties.style.color)
-    ) {
-      modifiedAttributes.color = fixupColorCode(vNode.properties.style.color);
-    }
-    if (
-      vNode.properties.style['background-color'] &&
-      !['transparent', 'auto'].includes(vNode.properties.style['background-color'])
-    ) {
-      modifiedAttributes.backgroundColor = fixupColorCode(
-        vNode.properties.style['background-color']
-      );
-    }
-    if (
-      vNode.properties.style['vertical-align'] &&
-      ['top', 'middle', 'bottom'].includes(vNode.properties.style['vertical-align'])
-    ) {
-      modifiedAttributes.verticalAlign = vNode.properties.style['vertical-align'];
-    }
-    if (
-      vNode.properties.style['text-align'] &&
-      ['left', 'right', 'center', 'justify'].includes(vNode.properties.style['text-align'])
-    ) {
-      modifiedAttributes.textAlign = vNode.properties.style['text-align'];
-    }
-    // FIXME: remove bold check when other font weights are handled.
-    if (vNode.properties.style['font-weight'] && vNode.properties.style['font-weight'] === 'bold') {
-      modifiedAttributes.strong = vNode.properties.style['font-weight'];
-    }
-    if (vNode.properties.style['font-size']) {
-      modifiedAttributes.fontSize = fixupFontSize(vNode.properties.style['font-size']);
-    }
-    if (vNode.properties.style['line-height']) {
-      modifiedAttributes.lineHeight = fixupLineHeight(
-        vNode.properties.style['line-height'],
-        vNode.properties.style['font-size']
-          ? fixupFontSize(vNode.properties.style['font-size'])
-          : null
-      );
-    }
-    if (vNode.properties.style.display) {
-      modifiedAttributes.display = vNode.properties.style.display;
-    }
-  }
-  if (isVNode(vNode) && vNode.tagName === 'blockquote') {
-    modifiedAttributes.indentation = { left: 284 };
-    modifiedAttributes.textAlign = 'justify';
-  }
-  const paragraphPropertiesFragment = buildParagraphProperties(modifiedAttributes);
-  paragraphFragment.import(paragraphPropertiesFragment);
-  if (isVNode(vNode) && vNode.children && Array.isArray(vNode.children) && vNode.children.length) {
-    if (
-      [
-        'span',
-        'strong',
-        'b',
-        'em',
-        'i',
-        'u',
-        'ins',
-        'strike',
-        'del',
-        's',
-        'sub',
-        'sup',
-        'mark',
-        'a',
-      ].includes(vNode.tagName)
-    ) {
-      const runOrHyperlinkFragments = buildRunOrHyperLink(
-        vNode,
-        modifiedAttributes,
-        docxDocumentInstance
-      );
-      if (Array.isArray(runOrHyperlinkFragments)) {
-        for (
-          let iteratorIndex = 0;
-          iteratorIndex < runOrHyperlinkFragments.length;
-          iteratorIndex++
-        ) {
-          const runOrHyperlinkFragment = runOrHyperlinkFragments[iteratorIndex];
 
-          paragraphFragment.import(runOrHyperlinkFragment);
-        }
-      } else {
-        paragraphFragment.import(runOrHyperlinkFragments);
-      }
-    } else if (vNode.tagName === 'blockquote') {
-      const runFragment = buildRun(vNode, attributes);
-      paragraphFragment.import(runFragment);
-    } else {
-      for (let index = 0; index < vNode.children.length; index++) {
-        const childVNode = vNode.children[index];
-        const runOrHyperlinkFragments = buildRunOrHyperLink(
-          childVNode,
-          modifiedAttributes,
-          docxDocumentInstance
-        );
-        if (Array.isArray(runOrHyperlinkFragments)) {
-          for (
-            let iteratorIndex = 0;
-            iteratorIndex < runOrHyperlinkFragments.length;
-            iteratorIndex++
-          ) {
-            const runOrHyperlinkFragment = runOrHyperlinkFragments[iteratorIndex];
-
-            paragraphFragment.import(runOrHyperlinkFragment);
-          }
-        } else {
-          paragraphFragment.import(runOrHyperlinkFragments);
-        }
-      }
-    }
-  } else {
-    // In case paragraphs has to be rendered where vText is present. Eg. table-cell
-    // Or in case the vNode is something like img
-    if (isVNode(vNode) && vNode.tagName === 'img') {
-      computeImageDimensions(vNode, modifiedAttributes);
-    }
-    const runFragments = buildRunOrRuns(vNode, modifiedAttributes);
-    if (Array.isArray(runFragments)) {
-      for (let index = 0; index < runFragments.length; index++) {
-        const runFragment = runFragments[index];
-
-        paragraphFragment.import(runFragment);
-      }
-    } else {
-      paragraphFragment.import(runFragments);
-    }
-  }
-  paragraphFragment.up();
-
-  return paragraphFragment;
-};
 
 const buildGridSpanFragment = (spanValue) => {
   const gridSpanFragment = fragment({
@@ -1414,15 +1142,6 @@ const buildTableCell = (vNode, attributes, rowSpanMap, columnIndex, docxDocument
     for (let index = 0; index < vNode.children.length; index++) {
       const childVNode = vNode.children[index];
       if (isVNode(childVNode) && childVNode.tagName === 'img') {
-        // const imageFragment = buildImage(
-        //   docxDocumentInstance,
-        //   childVNode,
-        //   modifiedAttributes.maximumWidth
-        // );
-        // if (imageFragment) {
-        //   tableCellFragment.import(imageFragment);
-        // }
-
         const result = buildImage(docxDocumentInstance, childVNode, modifiedAttributes.maximumWidth);
         if(result) {
           modifiedAttributes = {...modifiedAttributes, ...result};
@@ -1440,15 +1159,6 @@ const buildTableCell = (vNode, attributes, rowSpanMap, columnIndex, docxDocument
           for (let iteratorIndex = 0; iteratorIndex < childVNode.children.length; iteratorIndex++) {
             const grandChildVNode = childVNode.children[iteratorIndex];
             if (grandChildVNode.tagName === 'img') {
-              // const imageFragment = buildImage(
-              //   docxDocumentInstance,
-              //   grandChildVNode,
-              //   modifiedAttributes.maximumWidth
-              // );
-              // if (imageFragment) {
-              //   tableCellFragment.import(imageFragment);
-              // }
-
               const result = buildImage(docxDocumentInstance, grandChildVNode, modifiedAttributes.maximumWidth);
               if(result) {
                 modifiedAttributes = {...modifiedAttributes, ...result};
