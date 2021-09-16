@@ -771,6 +771,12 @@ const getRunFragment = (vNode, attributes, withProp) => {
   return runFragment;
 }
 
+/**
+ * Build a nested text fragment
+ * @param {VNode} vNode - Virtual node
+ * @param {any} attributes - attritbutes carried over from parent
+ * @param {[string]} textEls - Supported text elements
+ */
 const buildNestedText = (vNode, attributes, textEls) => {
   let modifiedAttributes = attributes;
   const runFragment = getRunFragment(vNode, modifiedAttributes, false);
@@ -818,6 +824,12 @@ const hyperLinkFragment = (vNode, docxDocumentInstance) => {
     .att('@r', 'id', `rId${relationshipId}`);
 }
 
+/**
+ * Build a fragment/fragments from a nested node
+ * @param {VNode} vNode - Virtual node
+ * @param {any} attributes - attritbutes carried over from parent
+ * @param {DocxDocument} docxDocumentInstance - document instance
+ */
 const buildNested = (vNode, attributes, docxDocumentInstance) => {
   const textEls = ['strong', 'b', 'em', 'i', 'u', 'ins', 'strike', 'del', 's', 'sub', 'sup', 'mark'];
   let modifiedAttributes = getModifiedAttributes(vNode, attributes);
