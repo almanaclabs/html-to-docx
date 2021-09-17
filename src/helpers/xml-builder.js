@@ -848,8 +848,6 @@ const buildNested = (vNode, attributes, docxDocumentInstance) => {
       runFragment = hyperLinkFragment(vNode, docxDocumentInstance);
       modifiedAttributes.hyperlink = true;
     } else if (vNode.tagName === 'br') {
-      // runFragment = getRunFragment(vNode, modifiedAttributes, false)
-      // runFragment.import(buildLineBreak());
       return buildLineBreak();
     } else if(textEls.includes(vNode.tagName)) {
       return buildNestedText(vNode, modifiedAttributes, textEls);
