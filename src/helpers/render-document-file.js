@@ -13,7 +13,6 @@ import sizeOf from 'image-size';
 import * as xmlBuilder from './xml-builder';
 import namespaces from './namespaces';
 
-// const HTMLToVDOM = HTMLToVDOM_;
 const convertHTML = HTMLToVDOM({
   VNode,
   VText,
