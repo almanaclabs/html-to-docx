@@ -133,7 +133,4 @@ describe('Paragraph', () => {
       </p>`));
     })
 
-
-
-
 })
