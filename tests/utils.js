@@ -7,3 +7,5 @@ export const htmlToXmlString = (body) => {
     const htmlString = minifyHTMLString(`<!DOCTYPE html>${body}</html>`);
     return renderDocumentFile(new DocxDocument({ zip:new JSZip(), htmlString })).toString({ prettyPrint: true })
 }
+
+export const trim = str => str.replace(/\s/g, '');

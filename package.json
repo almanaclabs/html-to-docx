@@ -12,7 +12,6 @@
   ],
   "main": "dist/html-to-docx.umd.js",
   "module": "dist/html-to-docx.esm.js",
-  "type": "module",
   "scripts": {
     "tests": "jest --verbose  ./tests",
     "release": "standard-version",

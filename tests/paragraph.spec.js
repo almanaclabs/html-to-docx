@@ -1,11 +1,11 @@
-import { htmlToXmlString } from './utils';
+import { htmlToXmlString, trim } from './utils';
 
 
 describe('Paragraph', () => {
 
     it('Simple paragraph', () => {
-        expect(htmlToXmlString('<p>Content</p>').replace(/\s/g, ''))
-        .toEqual(
+        expect(trim(htmlToXmlString('<p>Content</p>')))
+        .toEqual(trim(
         `<p xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
             <pPr>
                 <spacing xmlns:ns1="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:lineRule="exact"/>
@@ -14,7 +14,7 @@ describe('Paragraph', () => {
                 <rPr/>
                 <t xml:space="preserve">Content</t>
             </r>
-        </p>`.replace(/\s/g, ''));
+        </p>`));
     })
 
     it('Paragraph with style attributes', () => {
@@ -25,8 +25,8 @@ describe('Paragraph', () => {
             font-size:20px; 
             line-height:1.5;
         " >Content</p>`;
-        expect(htmlToXmlString(body).replace(/\s/g, ''))
-        .toEqual(
+        expect(trim(htmlToXmlString(body)))
+        .toEqual(trim(
         `<p xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
         <pPr>
           <jc xmlns:ns1="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:val="center"/>
@@ -40,7 +40,7 @@ describe('Paragraph', () => {
           </rPr>
           <t xml:space="preserve">Content</t>
         </r>
-      </p>`.replace(/\s/g, ''));
+      </p>`));
     })
 
     it('Paragraph with text elements', () => {
@@ -53,8 +53,8 @@ describe('Paragraph', () => {
         <sup>Superscript</sup> and 
         <mark>Highlighted</mark>
         </p>`
-        expect(htmlToXmlString(body).replace(/\s/g, ''))
-        .toEqual(
+        expect(trim(htmlToXmlString(body)))
+        .toEqual(trim(
         `<p xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
         <pPr>
           <spacing xmlns:ns1="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:lineRule="exact"/>
@@ -105,7 +105,7 @@ describe('Paragraph', () => {
           </rPr>
           <t xml:space="preserve">Highlighted</t>
         </r>
-      </p>`.replace(/\s/g, ''));
+      </p>`));
     })
 
  it('Paragraph with nested text elements', () => {
@@ -116,8 +116,8 @@ describe('Paragraph', () => {
             </i>
         </b>
         </p>`
-        expect(htmlToXmlString(body).replace(/\s/g, ''))
-        .toEqual(
+        expect(trim(htmlToXmlString(body)))
+        .toEqual(trim(
         `<p xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
         <pPr>
           <spacing xmlns:ns1="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:lineRule="exact"/>
@@ -130,7 +130,7 @@ describe('Paragraph', () => {
           </rPr>
           <t xml:space="preserve">Bold, Italic and Underlined </t>
         </r>
-      </p>`.replace(/\s/g, ''));
+      </p>`));
     })
 
 
