@@ -3,7 +3,7 @@
 import JSZip from 'jszip';
 import { addFilesToContainer } from './src/html-to-docx';
 
-export const minifyHTMLString = (htmlString) => {
+const minifyHTMLString = (htmlString) => {
   if (typeof htmlString === 'string' || htmlString instanceof String) {
     try {
       const minifiedHTMLString = htmlString
