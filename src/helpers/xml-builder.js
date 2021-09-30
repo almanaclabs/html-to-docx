@@ -776,6 +776,20 @@ const getRunFragment = (vNode, attributes, withProp) => {
   return runFragment;
 }
 
+
+
+const buildNestedTextChildrens = (runFragment, vNode, attributes, textEls) => {
+  if(vNode.children && vNode.children.length) {
+    for(const childVNode of vNode.children) {
+      if(isVText(childVNode)) {
+        runFragment.import(buildTextElement(childVNode.text));
+      }else {
+        runFragment.import(buildNestedText(childVNode, attributes, textEls))
+      }
+    }
+  }
+}
+
 /**
  * Build a nested text fragment
  * @param {VNode} vNode - Virtual node
@@ -783,33 +797,35 @@ const getRunFragment = (vNode, attributes, withProp) => {
  * @param {[string]} textEls - Supported text elements
  */
 const buildNestedText = (vNode, attributes, textEls) => {
-  let modifiedAttributes = attributes;
-  const runFragment = getRunFragment(vNode, modifiedAttributes, false);
-  const textArray = [];
-  let vNodes = [vNode];
-
-  const formats = [];
-  while (vNodes.length) {
-    const tempVNode = vNodes.shift();
-    modifiedAttributes = getModifiedAttributes(tempVNode, modifiedAttributes);
-    if(isVText(tempVNode)) {
-      textArray.push(tempVNode.text);
+  let modifiedAttributes = getModifiedAttributes(vNode, attributes);
+  let runFragment = getRunFragment(vNode, modifiedAttributes, false);
+  if(vNode.children.length === 1) {
+    let tempNode = vNode;
+    const formats = [];
+    while(isVNode(tempNode) && tempNode.children.length === 1) {
+      if(textEls.includes(tempNode.tagName)) formats.push(buildTextFormatting(tempNode));
+      tempNode = tempNode.children[0];
+      modifiedAttributes = getModifiedAttributes(tempNode, modifiedAttributes);
     }
-    if(isVNode(tempVNode) && textEls.includes(tempVNode.tagName)) {
-      const formattingFragment = buildTextFormatting(tempVNode);
-      formats.push(formattingFragment);
+    const runPropertiesFragment = buildRunProperties(modifiedAttributes);
+    if(isVText(tempNode)) {
+      formats.forEach(format=>runPropertiesFragment.import(format));
+      runFragment.import(runPropertiesFragment);
+      runFragment.import(buildTextElement(tempNode.text));
+    } else {
+      if(textEls.includes(tempNode.tagName)) formats.push(buildTextFormatting(tempNode));
+      formats.forEach(format=>runPropertiesFragment.import(format));
+      runFragment.import(runPropertiesFragment);
+      buildNestedTextChildrens(runFragment, tempNode, modifiedAttributes, textEls);
     }
-
-    if(tempVNode.children && tempVNode.children.length) {
-      vNodes = tempVNode.children.slice().concat(vNodes);
+  } else {
+    if(textEls.includes(vNode.tagName)) {
+      const format = buildTextFormatting(vNode);
+      const runPropertiesFragment = buildRunProperties(modifiedAttributes);
+      runPropertiesFragment.import(format);
+      runFragment.import(runPropertiesFragment);
     }
-  }
-  const runPropertiesFragment = buildRunProperties(modifiedAttributes);
-  formats.forEach(format=>runPropertiesFragment.import(format))
-  runFragment.import(runPropertiesFragment);
-  if(textArray.length) {
-    const combinedString = textArray.join('');
-    runFragment.import(buildTextElement(combinedString))
+    buildNestedTextChildrens(runFragment, vNode, modifiedAttributes, textEls);
   }
   runFragment.up()
   return runFragment;
@@ -850,6 +866,7 @@ const buildNested = (vNode, attributes, docxDocumentInstance) => {
     } else if (vNode.tagName === 'br') {
       return buildLineBreak();
     } else if(textEls.includes(vNode.tagName)) {
+
       return buildNestedText(vNode, modifiedAttributes, textEls);
     } 
     else if (vNode.tagName === 'img') {
