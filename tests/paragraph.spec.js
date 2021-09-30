@@ -133,4 +133,72 @@ describe('Paragraph', () => {
       </p>`));
     })
 
+    it('Paragraph with nested and mixed text elements', () => {
+      const body = `<p>
+      Paragraph -
+      <b>
+          <i>Bold, Italic and <u>Underlined </u></i>
+      </b>
+      - end
+      </p>`
+
+      expect(trim(htmlToXmlString(body)))
+      .toEqual(trim(
+      `<p xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <pPr>
+        <spacing xmlns:ns1="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:lineRule="exact"/>
+      </pPr>
+      <r>
+        <rPr/>
+        <t xml:space="preserve">      Paragraph -      </t>
+      </r>
+      <r>
+        <rPr>
+          <b/>
+          <i/>
+        </rPr>
+        <t xml:space="preserve">Bold, Italic and </t>
+        <r>
+          <rPr>
+            <u xmlns:ns2="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns2:val="single"/>
+          </rPr>
+          <t xml:space="preserve">Underlined </t>
+        </r>
+      </r>
+      <r>
+        <rPr/>
+        <t xml:space="preserve">      - end      </t>
+      </r>
+    </p>`));
+
+  })
+
+  it('Nested paragraph with style', () => {
+
+    const body = `<p>
+    <b>
+    <u>
+            <span style="background-color: #ffe6f4;" >Bold, Italic and Underlined </ span >
+    </u>
+    </b>
+    </p>`
+
+    expect(trim(htmlToXmlString(body)))
+    .toEqual(trim(
+    `<p xmlns="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+    <pPr>
+      <spacing xmlns:ns1="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns1:lineRule="exact"/>
+    </pPr>
+    <r>
+      <rPr>
+        <shd xmlns:ns2="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns2:val="clear" ns2:fill="ffe6f4"/>
+        <b/>
+        <u xmlns:ns3="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ns3:val="single"/>
+      </rPr>
+      <t xml:space="preserve">Bold, Italic and Underlined </t>
+    </r>
+  </p>`));
+
+});
+
 })
