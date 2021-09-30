@@ -13,7 +13,7 @@
   "main": "dist/html-to-docx.umd.js",
   "module": "dist/html-to-docx.esm.js",
   "scripts": {
-    "test": "npm run build && node example/example-node.js",
+    "tests": "jest --verbose  ./tests",
     "release": "standard-version",
     "lint": "eslint --fix .",
     "prettier:check": "prettier --check '**/*.{js}'",
@@ -35,6 +35,8 @@
   },
   "homepage": "https://github.com/privateOmega/html-to-docx#readme",
   "devDependencies": {
+    "@babel/core": "^7.12.9",
+    "@babel/preset-env": "^7.12.7",
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
     "@rollup/plugin-commonjs": "^12.0.0",
@@ -56,7 +58,8 @@
     "rollup-plugin-cleaner": "^1.0.0",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-terser": "^6.1.0",
-    "standard-version": "^8.0.0"
+    "standard-version": "^8.0.0",
+    "jest": "^26.6.3"
   },
   "dependencies": {
     "color-name": "^1.1.4",
@@ -82,8 +85,7 @@
   "lint-staged": {
     "src/**/*.js": [
       "prettier --write",
-      "eslint --fix",
-      "git add"
+      "eslint --fix"
     ]
   }
 }
